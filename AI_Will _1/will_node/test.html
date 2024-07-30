@@ -1,0 +1,32 @@
+<script>
+    var html_desc = '';
+
+
+
+    
+    // Function to extract the price and description
+    function extractPriceAndDescription() {
+        // Find the element with the price information
+        const priceElement = document.querySelector('[data-testid="current-price"]');
+        const descriptionElement = document.querySelector('h1[class="jcdpl"]');
+
+        // Check if the elements are found
+        if (priceElement && descriptionElement) {
+            const price = priceElement.textContent.trim();
+            const description = descriptionElement.textContent.trim();
+
+            // Log or display the extracted values
+            console.log('Price:', price);
+            console.log('Description:', description);
+
+            // You can use these values as needed
+        } else {
+            console.log('Price or description elements not found.');
+        }
+    }
+
+    // Call the function to extract the data
+    extractPriceAndDescription();
+
+
+</script>

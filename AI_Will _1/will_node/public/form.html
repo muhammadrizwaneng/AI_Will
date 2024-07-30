@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Data Form</title>
+  </head>
+  <style>
+    /* Style the container div for each question and answer */
+    .question-container {
+        margin-bottom: 10px;
+    }
+
+    /* Style the input elements */
+    input[type="text"] {
+        width: 50%;
+        height: 30px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+  <body>
+    <h1>SeeBiz</h1>
+    <div id="loading" style="display: block;">
+      <p>Loading...</p>
+  </div>
+    <div id="content" style="display: none;">
+      <form id="bioDataForm">
+        <div id="questionContainer">
+        </div>
+        <button type="submit">Generate Will</button>
+      </form>
+    </div> 
+    <div id="suggestedAnswers" style="display: none;"></div>
+
+    
+    
+
+    <script>
+      // Array of questions and answers
+      let questionsAndAnswers = [
+        
+      ];
+
+      function capitalizeFirstLetter(inputString) {
+          return inputString.replace(/^(.)/, (match) => match.toUpperCase());
+      }
+      function createQuestionInputs(questionsAndAnswers) {
+        const questionContainer = document.getElementById("questionContainer");
+        questionsAndAnswers.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.classList.add("question-container");
+
+            const heading = document.createElement("h3");
+            heading.textContent = `Question ${index + 1}: ${item.question}`;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.name = `question${index}`;
+            input.placeholder = item.question;
+            input.value = capitalizeFirstLetter(item.answer);
+
+            div.appendChild(heading);
+            div.appendChild(input);
+            questionContainer.appendChild(div);
+        });
+      }
+      // Your JavaScript code for the fetch call on load of the page
+
+      fetch('http://127.0.0.1:5000/getBioDataAnswerFromBertModel')
+          .then(response => response.json())
+          .then(response => {
+              console.log("data", response)
+              // Data is fetched successfully
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('content').style.display = 'block';
+              questionsAndAnswers = response.data;
+              createQuestionInputs(response.data)
+              // Process and display data
+              // For example, you can append it to the 'content' div
+              // const contentDiv = document.getElementById('content');
+              // data.forEach((item, index) => {
+              //     const paragraph = document.createElement('p');
+              //     paragraph.textContent = `Question ${index + 1}: ${item}`;
+              //     contentDiv.appendChild(paragraph);
+              // });
+          })
+          .catch(error => {
+              // Handle errors here
+              console.error('Error:', error);
+              document.getElementById('loading').style.display = 'none';
+              // Optionally, display an error message
+              document.getElementById('content').textContent = 'Failed to fetch data.';
+          });
+      // Your JavaScript code for the fetch call on load of the page    
+      const bioDataForm = document.getElementById("bioDataForm");
+      const suggestedAnswersDiv = document.getElementById("suggestedAnswers");
+
+      bioDataForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        // Collect user input
+        const userInput = [];
+        console.log("questionsAndAnswers",questionsAndAnswers);
+        //return false
+        questionsAndAnswers.forEach((item, index) => {
+          const input = document.querySelector(
+            `input[name="question${index}"]`
+          );
+          userInput.push({ question: item.question, answer: input.value });
+        });
+
+        console.log("Hello data ", userInput);
+        const outputObject = {
+              "answer_data": userInput.map(item => ({ "answer": item.answer }))
+          };
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('content').style.display = 'none';
+        document.getElementById('loading').innerHTML = "Generating ...";
+        // console.log(JSON.stringify(outputObject, null, 4));
+        // return false
+        // Send an AJAX request to fetch suggested answers
+        fetch("http://127.0.0.1:5000/willByChatGpt", {
+          method: "POST", // Adjust the method as needed
+          body: JSON.stringify(outputObject),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((response) => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'none';
+            console.log|("response of yhe", response);
+            suggestedAnswers.style.display = 'block';
+            suggestedAnswersDiv.innerHTML = "<h2>Will generated:</h2>";
+            const textWithLineBreaksReplaced = response.data.replace(/\n/g, '<br>');
+
+            suggestedAnswersDiv.innerHTML += `<p>${textWithLineBreaksReplaced}</p>`;
+            // data.forEach((suggestedAnswer, index) => {
+            //   suggestedAnswersDiv.innerHTML += `<p><strong>${questionsAndAnswers[index].question}:</strong> ${suggestedAnswer}</p>`;
+            // });
+          })
+          .catch((error) => console.error(error));
+      });
+    </script>
+  </body>
+</html>
